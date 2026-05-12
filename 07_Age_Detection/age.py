@@ -77,5 +77,5 @@ def process_image(image_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-image_path = "src/age.jpg"
+image_path = "src/child.png"
 process_image(image_path)
