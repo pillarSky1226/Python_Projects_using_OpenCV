@@ -11,6 +11,12 @@ face_model = os.path.join(BASE_DIR, "model", "opencv_face_detector_uint8.pb")
 age_proto = os.path.join(BASE_DIR, "model", "age_deploy.prototxt")
 age_model = os.path.join(BASE_DIR, "model", "age_net.caffemodel")
 
+MODEL_MEAN_VALUES = (78.4263377603, 87.7689143744, 114.895847746)
+age_list = [
+    "(0-2)", "(4-6)", "(8-12)", "(15-20)",
+    "(25-32)", "(38-43)", "(48-53)", "(60-100)",
+]
+
 face_net = cv2.dnn.readNetFromTensorflow(face_model, face_proto)
 age_net = cv2.dnn.readNetFromCaffe(age_proto, age_model)
 
@@ -39,11 +45,23 @@ def predict_age(face, net):
     age = age_list[age_preds[0].argmax()]
     return age
 
+def imread_file(path):
+    """Load BGR image; works with Unicode paths on Windows (unlike cv2.imread)."""
+    if not os.path.isfile(path):
+        return None
+    data = np.fromfile(path, dtype=np.uint8)
+    return cv2.imdecode(data, cv2.IMREAD_COLOR)
+
+
 def process_image(image_path):
-    frame = cv2.imread(image_path)
- 
+    frame = imread_file(image_path)
+
     if frame is None:
-        print(f"Error: Image not found at {image_path}")
+        src_dir = os.path.join(BASE_DIR, "src")
+        print(f"Error: Could not open image: {image_path}")
+        if not os.path.isdir(src_dir):
+            print(f"Missing folder: {src_dir}")
+        print(f"Create that folder (if needed) and put your photo there as age.jpg, age.jpeg, or age.png.")
         return
 
     frame, face_boxes = detect_faces(face_net, frame)
@@ -59,5 +77,5 @@ def process_image(image_path):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-image_path = "src\age.png"
+image_path = "src/age.jpg"
 process_image(image_path)
